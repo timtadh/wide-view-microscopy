@@ -1,0 +1,17 @@
+*swp
+*swo
+*.bak
+*~
+*.g
+*.png
+data
+cpuprof
+memprof
+*.out
+*.pprof
+*.pem
+*.tar.gz
+
+pkg/
+bin/
+
