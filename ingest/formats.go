@@ -135,10 +135,10 @@ func (f Format) ParseInto(bytes []byte, meta map[string]string) error {
 
 func (f Format) scan_char(i, j int, bytes []byte) (int, error) {
 	if j >= len(bytes) {
-		return j, fmt.Errorf("unexpected EOF, expected '%v'", f[i])
+		return j, fmt.Errorf("unexpected EOF, expected '%v' at format symbol %v", f[i], i)
 	}
 	if bytes[j] != f[i].Char {
-		return j, fmt.Errorf("unexpected '%v', expected '%v'", string(bytes[j]), string(f[i].Char))
+		return j, fmt.Errorf("unexpected '%v', expected '%v' at character %v", string(bytes[j]), string(f[i].Char), j)
 	}
 	return j+1, nil
 }
@@ -146,6 +146,7 @@ func (f Format) scan_char(i, j int, bytes []byte) (int, error) {
 func (f Format) scan_var(i, j int, bytes []byte, meta map[string]string) (int, error) {
 	var eof bool
 	var stop byte
+	var prev byte
 	if i + 1 >= len(f) {
 		eof = true
 	} else {
@@ -154,10 +155,16 @@ func (f Format) scan_var(i, j int, bytes []byte, meta map[string]string) (int, e
 		}
 		stop = f[i+1].Char
 	}
+	if i - 1 >= 0 {
+		if f[i-1].Type != FormatChar {
+			return j, fmt.Errorf("Format string invalid, to variables next to each other with out const separator")
+		}
+		prev = f[i-1].Char
+	}
 	buf := make([]byte, 0, len(bytes)-j)
 	c := j
 	for ; c < len(bytes); c++ {
-		if !eof && bytes[c] == stop {
+		if !eof && (bytes[c] == stop || bytes[c] == prev) {
 			break
 		}
 		buf = append(buf, bytes[c])
@@ -315,6 +322,11 @@ func ParseFormatString(format string) (Format, error) {
 	if len(format) != i {
 		return nil, fmt.Errorf("unconsumed input %v", format[i:])
 	}
-	return node.(Format), nil
+	f := node.(Format)
+	err = f.Validate()
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
 }
 

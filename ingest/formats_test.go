@@ -110,6 +110,7 @@ func TestRealFormat(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Log(format)
 	t.Log(format.VerboseString())
 	meta, err := format.Parse([]byte("1 WT16226 L1 CD34.tif"))
 	if err != nil {
@@ -127,6 +128,17 @@ func TestRealFormat(t *testing.T) {
 	}
 	if meta["stain"] != "CD34" {
 		t.Fatal("stain != CD34")
+	}
+}
+
+func TestRealBadFormat(t *testing.T) {
+	format, err := ParseFormatString("$(slide) $(sample) $(region) $(stain).tif")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = format.Parse([]byte("1 WT16226 L99 blood vessel CD34.tif"))
+	if err == nil {
+		t.Fatal("string should not have parsed")
 	}
 }
 
