@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -12,6 +13,7 @@ import (
 )
 
 import (
+	"github.com/timtadh/wide-view-microscopy/ingest"
 )
 
 
@@ -76,17 +78,55 @@ func main() {
 		fmt.Fprintf(os.Stderr, "unexpected trailing args `%v`\n", strings.Join(args, " "))
 		Usage(1)
 	}
-
+	
+	format, err := ingest.ParseFormatString("$(slide) $(subject) $(region) $(stain).tif")
+	if err != nil {
+		log.Fatal(err)
+	}
+	directory := ""
 	for _, oa := range optargs {
 		switch oa.Opt() {
 		case "-h", "--help":
 			Usage(0)
 			os.Exit(0)
+		case "-f", "--format":
+			format, err = ingest.ParseFormatString(oa.Arg())
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Invalid format string (%v) '%v'\n", oa.Opt(), oa.Arg())
+				fmt.Fprintln(os.Stderr, err)
+				Usage(1)
+			}
+		case "-d", "--directory":
+			directory, err = filepath.Abs(oa.Arg())
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Bad directory (%v) '%v' supplied\n", oa.Opt(), oa.Arg())
+				Usage(1)
+			}
+			if _, err := os.Stat(directory); err != nil && os.IsNotExist(err) {
+				fmt.Fprintf(os.Stderr, "Bad directory (%v) '%v' supplied\n", oa.Opt(), oa.Arg())
+				Usage(1)
+			} else if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				fmt.Fprintf(os.Stderr, "Bad directory (%v) '%v' supplied\n", oa.Opt(), oa.Arg())
+				Usage(1)
+			}
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown flag '%v'\n", oa.Opt())
 			Usage(1)
 		}
 	}
+
+	log.Println(directory)
+
+	files, err := ingest.Ingest(directory, format)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(files)
+	for _, img := range files {
+		log.Println(img)
+	}
+
 
 	log.Println("done")
 }

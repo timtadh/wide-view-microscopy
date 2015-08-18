@@ -64,7 +64,7 @@ func Jpeg(path string) (jpegPath string, err error) {
 	}
 	defer from.Close()
 
-	to, err := os.Open(jpegPath)
+	to, err := os.Create(jpegPath)
 	if err != nil {
 		return "", err
 	}
