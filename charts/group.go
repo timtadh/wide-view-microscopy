@@ -47,6 +47,9 @@ type sortableImages struct {
 func OrderBy(images []Images, on []string) []Images {
 	list := make([]Images, len(images))
 	copy(list, images)
+	if len(on) <= 0 {
+		return list
+	}
 	s := &sortableImages{
 		Images: list,
 		On: on,
@@ -109,20 +112,22 @@ func Group(images []Images, on []string) ([][]Images, []ingest.Metadata) {
 	return groups, metas
 }
 
-func MakeRows(images []*ingest.Image, on []string) []*Row {
+func MakeRows(images []*ingest.Image, on, sortOn []string) []*Row {
 	groups, metas := Group(imageListAsImages(images), on)
 	rows := make([]*Row, 0, len(groups))
 	for i := 0; i < len(groups); i++ {
-		rows = append(rows, &Row{meta: metas[i], images: imagesAsImageList(groups[i])})
+		row := imagesAsImageList(OrderBy(groups[i], sortOn))
+		rows = append(rows, &Row{meta: metas[i], images: row})
 	}
 	return rows
 }
 
-func MakeCharts(rows []*Row, on []string) []*Chart {
-	groups, metas := Group(rowsAsImages(rows), on)
+func MakeCharts(images []*ingest.Image, on, rowOn, sortOn []string) []*Chart {
+	groups, metas := Group(imageListAsImages(images), on)
 	charts := make([]*Chart, 0, len(groups))
 	for i := 0; i < len(groups); i++ {
-		charts = append(charts, &Chart{meta: metas[i], rows: imagesAsRows(groups[i])})
+		rows := MakeRows(imagesAsImageList(groups[i]), rowOn, sortOn)
+		charts = append(charts, &Chart{meta: metas[i], rows: rows})
 	}
 	return charts
 }
