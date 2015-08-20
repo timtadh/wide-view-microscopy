@@ -8,9 +8,33 @@ import (
 )
 
 
+type Metadata map[string]string
+
+func (m Metadata) Equal(b Metadata) bool {
+	if len(m) != len(b) {
+		return false
+	}
+	for k, x := range m {
+		if y, has := b[k]; !has {
+			return false
+		} else if x != y {
+			return false
+		}
+	}
+	return true
+}
+
 type Image struct {
 	Path string
-	Metadata map[string]string
+	Metadata Metadata
+}
+
+func (i *Image) Meta() Metadata {
+	return i.Metadata
+}
+
+func (i *Image) Images() []*Image {
+	return []*Image{i}
 }
 
 func Ingest(dir string, format Format) (paths []*Image, err error) {

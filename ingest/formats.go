@@ -98,8 +98,8 @@ func (f Format) Validate() error {
 	return nil
 }
 
-func (f Format) Parse(bytes []byte) (map[string]string, error) {
-	meta := make(map[string]string, len(f)/2 + 1)
+func (f Format) Parse(bytes []byte) (Metadata, error) {
+	meta := make(Metadata, len(f)/2 + 1)
 	err := f.ParseInto(bytes, meta)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (f Format) Parse(bytes []byte) (map[string]string, error) {
 	return meta, nil
 }
 
-func (f Format) ParseInto(bytes []byte, meta map[string]string) error {
+func (f Format) ParseInto(bytes []byte, meta Metadata) error {
 	err := f.Validate()
 	if err != nil {
 		return err
@@ -143,7 +143,7 @@ func (f Format) scan_char(i, j int, bytes []byte) (int, error) {
 	return j+1, nil
 }
 
-func (f Format) scan_var(i, j int, bytes []byte, meta map[string]string) (int, error) {
+func (f Format) scan_var(i, j int, bytes []byte, meta Metadata) (int, error) {
 	var eof bool
 	var stop byte
 	var prev byte
