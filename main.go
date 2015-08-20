@@ -36,7 +36,7 @@ wide-view-microscopy -d <path> -o <out.html> \
 -r, row-group=<vars>                variables to group row on
                                     default: 'region'
 -c, chart-group=<vars>              variables to group charts on
-                                    default: 'sample,slide'
+                                    default: 'subject,slide'
 -s, column-sort=<vars>              variables to sort columns on
                                     default: 'stain'
 
@@ -113,7 +113,7 @@ func main() {
 	}
 	directory := ""
 	rowGroup := Vars("region")
-	chartGroup := Vars("sample,slide")
+	chartGroup := Vars("subject,slide")
 	columnSort := Vars("stain")
 	for _, oa := range optargs {
 		switch oa.Opt() {
@@ -164,7 +164,8 @@ func main() {
 		log.Println(img)
 	}
 
-	for _, chart := range charts.MakeCharts(files, chartGroup, rowGroup, columnSort) {
+	C := charts.MakeCharts(files, chartGroup, rowGroup, columnSort) 
+	for _, chart := range C {
 		log.Println("chart", chart.Meta())
 		for _, row := range chart.Rows() {
 			log.Println("row", row.Meta())
@@ -177,5 +178,6 @@ func main() {
 	}
 
 	log.Println("done")
+	fmt.Println(charts.ChartsHTML(C))
 }
 

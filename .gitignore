@@ -11,6 +11,7 @@ memprof
 *.pprof
 *.pem
 *.tar.gz
+*.html
 
 pkg/
 bin/
