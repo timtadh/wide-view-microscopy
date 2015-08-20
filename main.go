@@ -14,6 +14,7 @@ import (
 
 import (
 	"github.com/timtadh/wide-view-microscopy/ingest"
+	"github.com/timtadh/wide-view-microscopy/charts"
 )
 
 
@@ -31,7 +32,21 @@ wide-view-microscopy -d <path> -o <out.html> \
 -o, output=<path>                   output for the html
                                     (optional will go to stdout)
 -f, format=<format-string>          a format for the names of the images
-                                    '$(slide) $(subject) $(region) $(stain).tif'
+                                    default: '$(slide) $(subject) $(region) $(stain).tif'
+-r, row-group=<vars>                variables to group row on
+                                    default: 'region'
+-c, chart-group=<vars>              variables to group charts on
+                                    default: 'sample,slide'
+-s, column-sort=<vars>              variables to sort columns on
+                                    default: 'stain'
+
++-------+
+| Specs |
++-------+
+
+<format-string>     See below
+<path>              A file system path
+<vars>              A comma separated list of variables.
 
 +---------------+
 | Format Fields |
@@ -64,11 +79,24 @@ func Usage(code int) {
 	os.Exit(code)
 }
 
+func Vars(str string) []string {
+	split := strings.Split(str, ",")
+	vars := make([]string, 0, len(split))
+	for _, s := range split {
+		s = strings.TrimSpace(s)
+		if s != "" {
+			vars = append(vars, s)
+		}
+	}
+	return vars
+}
+
 func main() {
 	args, optargs, err := getopt.GetOpt(
 		os.Args[1:],
-		"hl:d:o:f:",
-		[]string{ "help", "directory=", "output=", "format="},
+		"hl:d:o:f:s:r:c:",
+		[]string{ "help", "directory=", "output=", "format=",
+		          "column-sort=", "row-group=", "chart-group=" },
 	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error parsing command line flags", err)
@@ -84,6 +112,9 @@ func main() {
 		log.Fatal(err)
 	}
 	directory := ""
+	rowGroup := Vars("region")
+	chartGroup := Vars("sample,slide")
+	columnSort := Vars("stain")
 	for _, oa := range optargs {
 		switch oa.Opt() {
 		case "-h", "--help":
@@ -110,6 +141,12 @@ func main() {
 				fmt.Fprintf(os.Stderr, "Bad directory (%v) '%v' supplied\n", oa.Opt(), oa.Arg())
 				Usage(1)
 			}
+		case "-s", "--column-sort":
+			columnSort = Vars(oa.Arg())
+		case "-r", "--row-group":
+			rowGroup = Vars(oa.Arg())
+		case "-c", "--chart-group":
+			chartGroup = Vars(oa.Arg())
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown flag '%v'\n", oa.Opt())
 			Usage(1)
@@ -127,6 +164,17 @@ func main() {
 		log.Println(img)
 	}
 
+	for _, chart := range charts.MakeCharts(files, chartGroup, rowGroup, columnSort) {
+		log.Println("chart", chart.Meta())
+		for _, row := range chart.Rows() {
+			log.Println("row", row.Meta())
+			for _, img := range row.Images() {
+				log.Println(img)
+			}
+			log.Println()
+		}
+		log.Println()
+	}
 
 	log.Println("done")
 }

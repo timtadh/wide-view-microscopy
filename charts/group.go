@@ -183,12 +183,12 @@ func (c *Chart) Images() []*ingest.Image {
 	return images
 }
 
+func (c *Chart) Rows() []*Row {
+	return c.rows
+}
+
 func (c *Chart) Subgroups() []Images {
-	list := make([]Images, 0, len(c.rows))
-	for _, row := range c.rows {
-		list = append(list, row)
-	}
-	return list
+	return rowsAsImages(c.rows)
 }
 
 func (r *Row) Meta() ingest.Metadata {
