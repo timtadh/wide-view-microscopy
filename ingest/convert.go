@@ -28,6 +28,24 @@ func Decode(r io.Reader) (image.Image, error) {
 	return img, nil
 }
 
+func LoadImage(path string) (image.Image, error) {
+	from, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer from.Close()
+	return Decode(from)
+}
+
+func WriteJpeg(path string, img image.Image) error {
+	to, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer to.Close()
+	return EncodeJpeg(img, to)
+}
+
 func ConvertToJpeg(from io.Reader, to io.Writer) error {
 	img, err := Decode(from)
 	if err != nil {

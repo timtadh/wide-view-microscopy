@@ -39,6 +39,7 @@ wide-view-microscopy -d <path> -o <out.html> \
                                     default: 'subject,slide'
 -s, column-sort=<vars>              variables to sort columns on
                                     default: 'stain'
+--overlap-columns=<vals>            values of the first sort column to overlap
 
 +-------+
 | Specs |
@@ -96,7 +97,8 @@ func main() {
 		os.Args[1:],
 		"hl:d:o:f:s:r:c:",
 		[]string{ "help", "directory=", "output=", "format=",
-		          "column-sort=", "row-group=", "chart-group=" },
+		          "column-sort=", "row-group=", "chart-group=",
+		          "overlap-columns=",},
 	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error parsing command line flags", err)
@@ -115,6 +117,7 @@ func main() {
 	rowGroup := Vars("region")
 	chartGroup := Vars("subject,slide")
 	columnSort := Vars("stain")
+	overlapCols := Vars("")
 	for _, oa := range optargs {
 		switch oa.Opt() {
 		case "-h", "--help":
@@ -147,6 +150,8 @@ func main() {
 			rowGroup = Vars(oa.Arg())
 		case "-c", "--chart-group":
 			chartGroup = Vars(oa.Arg())
+		case "--overlap-columns":
+			overlapCols = Vars(oa.Arg())
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown flag '%v'\n", oa.Opt())
 			Usage(1)
@@ -164,7 +169,7 @@ func main() {
 		log.Println(img)
 	}
 
-	C := charts.MakeCharts(files, chartGroup, rowGroup, columnSort) 
+	C := charts.MakeCharts(files, chartGroup, rowGroup, columnSort, overlapCols) 
 	for _, chart := range C {
 		log.Println("chart", chart.Meta())
 		for _, row := range chart.Rows() {

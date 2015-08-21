@@ -4,3 +4,6 @@
 [submodule "src/golang.org/x/image"]
 	path = src/golang.org/x/image
 	url = git@github.com:golang/image
+[submodule "src/github.com/disintegration/imaging"]
+	path = src/github.com/disintegration/imaging
+	url = git@github.com:disintegration/imaging

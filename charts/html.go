@@ -17,13 +17,12 @@ var CHART_TEMPLATE = template.Must(template.New("chart").Funcs(funcs).Parse(`
 </div>
 <div class="chart">
 	<div class="chart-fields">
-		<div class="chart-field">region</div>
+		<div class="chart-field"></div>
 		{{range $col := (index .Rows 0).Images}}
 			<div class="chart-field">
 				{{(index $col.Meta "stain")}}
 			</div>
 		{{end}}
-		<div class="chart-field">overlap</div>
 	</div>
 	{{range $row := .Rows}}
 		<div class="chart-row">
@@ -35,12 +34,6 @@ var CHART_TEMPLATE = template.Must(template.New("chart").Funcs(funcs).Parse(`
 					<img src="file:///{{$col.Path}}"/>
 				</div>
 			{{end}}
-			<div class="chart-img chart-img-overflow">
-			{{range $idx, $col := $row.Images}}
-				<img class="chart-overlap{{if ne $idx 0}} chart-overlap-others{{end}}"
-					src="file:///{{$col.Path}}" style="left: -{{add (mul 250 $idx) (mul 4 $idx)}}px;"/>
-			{{end}}
-			</div>
 		</div>
 	{{end}}
 </div>

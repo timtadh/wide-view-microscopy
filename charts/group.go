@@ -2,6 +2,7 @@ package charts
 
 import (
 	"sort"
+	"log"
 )
 
 import (
@@ -112,21 +113,49 @@ func Group(images []Images, on []string) ([][]Images, []ingest.Metadata) {
 	return groups, metas
 }
 
-func MakeRows(images []*ingest.Image, on, sortOn []string) []*Row {
+func OverlayImages(imgs []*ingest.Image, key string, vals []string) []*ingest.Image {
+	in := func(val string, vals []string) bool {
+		for _, v2 := range vals {
+			if val == v2 {
+				return true
+			}
+		}
+		return false
+	}
+	if len(vals) <= 1 {
+		return imgs
+	}
+	toOverlay := make([]*ingest.Image, 0, len(imgs))
+	for _, img := range imgs {
+		if in(img.Meta()[key], vals) {
+			toOverlay = append(toOverlay, img)
+		}
+	}
+	overlayed, err := Overlay(toOverlay)
+	if err != nil {
+		log.Panic(err)
+	}
+	return append(imgs, overlayed)
+}
+
+func MakeRows(images []*ingest.Image, on, sortOn, overlay []string) []*Row {
 	groups, metas := Group(imageListAsImages(images), on)
 	rows := make([]*Row, 0, len(groups))
 	for i := 0; i < len(groups); i++ {
 		row := imagesAsImageList(OrderBy(groups[i], sortOn))
+		if len(sortOn) > 0 {
+			row = OverlayImages(row, sortOn[0], overlay)
+		}
 		rows = append(rows, &Row{meta: metas[i], images: row})
 	}
 	return rows
 }
 
-func MakeCharts(images []*ingest.Image, on, rowOn, sortOn []string) []*Chart {
+func MakeCharts(images []*ingest.Image, on, rowOn, sortOn, overlay []string) []*Chart {
 	groups, metas := Group(imageListAsImages(images), on)
 	charts := make([]*Chart, 0, len(groups))
 	for i := 0; i < len(groups); i++ {
-		rows := MakeRows(imagesAsImageList(groups[i]), rowOn, sortOn)
+		rows := MakeRows(imagesAsImageList(groups[i]), rowOn, sortOn, overlay)
 		charts = append(charts, &Chart{meta: metas[i], rows: rows})
 	}
 	return charts
